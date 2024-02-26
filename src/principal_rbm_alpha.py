@@ -98,11 +98,14 @@ class RBM:
     Methods:
     - __init__(self, n_visible: int, n_hidden: int, random_state=None) -> None: Initialize the RBM.
     - _sigmoid(self, x: numpy.ndarray) -> numpy.ndarray: Sigmoid activation function.
-    - _reconstruction_error(self, input: numpy.ndarray, image: numpy.ndarray) -> float: Compute reconstruction error.
-    - entree_sortie(self, data: numpy.ndarray) -> numpy.ndarray: Compute hidden units given visible units.
-    - sortie_entree(self, data_h: numpy.ndarray) -> numpy.ndarray: Compute visible units given hidden units.
-    - train(self, data: numpy.ndarray, learning_rate: float=0.1, n_epochs: int=10, batch_size: int=10) -> RBM:
-        Train the RBM using Contrastive Divergence.
+    - _reconstruction_error(self, input: numpy.ndarray, image: numpy.ndarray) -> float: 
+        Compute reconstruction error.
+    - entree_sortie(self, data: numpy.ndarray) -> numpy.ndarray: Compute hidden units given visible
+        units.
+    - sortie_entree(self, data_h: numpy.ndarray) -> numpy.ndarray: Compute visible units given
+        hidden units.
+    - train(self, data: numpy.ndarray, learning_rate: float=0.1, n_epochs: int=10, 
+        batch_size: int=10) -> RBM: Train the RBM using Contrastive Divergence.
     - generer_image(self, n_samples: int=1, n_gibbs_steps: int=1000) -> numpy.ndarray: 
         Generate samples from the RBM using Gibbs sampling.
     """
@@ -117,7 +120,7 @@ class RBM:
         """
         self.n_visible = n_visible
         self.n_hidden = n_hidden
-        
+
         self.a = np.zeros((1, n_visible))
         self.b = np.zeros((1, n_hidden))
         self.rng = np.random.default_rng(random_state)
@@ -134,8 +137,8 @@ class RBM:
         - numpy.ndarray: Result of applying the sigmoid function to the input.
         """
         return 1 / (1 + np.exp(-x))
-    
-    def _reconstruction_error(self, input: np.ndarray, image: np.ndarray) -> float:
+
+    def _reconstruction_error(self, image: np.ndarray, reconstruction: np.ndarray) -> float:
         """
         Compute reconstruction error.
 
@@ -146,7 +149,7 @@ class RBM:
         Returns:
         - float: Reconstruction error.
         """
-        return np.round(np.power(image - input, 2).mean(), 3)
+        return np.round(np.power(reconstruction - image, 2).mean(), 3)
 
     def entree_sortie(self, data: np.ndarray) -> np.ndarray:
         """
@@ -172,7 +175,12 @@ class RBM:
         """
         return self._sigmoid(data_h @ self.W.T + self.a)
 
-    def train(self, data: np.ndarray, learning_rate: float = 0.1, n_epochs: int = 10, batch_size: int = 10) -> 'RBM':
+    def train(self,
+              data: np.ndarray,
+              learning_rate: float=0.1,
+              n_epochs: int=10,
+              batch_size: int=10
+        ) -> 'RBM':
         """
         Train the RBM using Contrastive Divergence.
 
@@ -193,14 +201,16 @@ class RBM:
                 pos_h_probs = self.entree_sortie(batch)
                 pos_v_probs = self.sortie_entree(pos_h_probs)
                 neg_h_probs = self.entree_sortie(pos_v_probs)
-                
+
                 # Update weights and biases
-                self.W += learning_rate * (batch.T @ pos_h_probs - pos_v_probs.T @ neg_h_probs) / batch_size
+                self.W += learning_rate * (
+                    batch.T @ pos_h_probs - pos_v_probs.T @ neg_h_probs) / batch_size
                 self.b += learning_rate * (pos_h_probs.mean(axis=0) - neg_h_probs.mean(axis=0))
                 self.a += learning_rate * (batch.mean(axis=0) - pos_v_probs.mean(axis=0))
-                
+
             if epoch % 10 == 0:  # Print every 10 epochs
-                print(f"Epochs: {epoch}. Reconstruction error: {self._reconstruction_error(batch, pos_v_probs)}.")
+                print(f"Epochs: {epoch}."
+                      f"Reconstruction error: {self._reconstruction_error(batch, pos_v_probs)}.")
 
         return self
 
@@ -216,12 +226,13 @@ class RBM:
         - numpy.ndarray: Generated samples, shape (n_samples, n_visible).
         """
         samples = np.zeros((n_samples, self.n_visible))
-        
-        # Matrix of initlization value of Gibbs samples for each sample. 
-        V = self.rng.binomial(1, self.rng.random(), size=n_samples * self.n_visible).reshape((n_samples, self.n_visible))
+
+        # Matrix of initlization value of Gibbs samples for each sample.
+        v_inits = self.rng.binomial(1, self.rng.random(), size=n_samples * self.n_visible
+                                    ).reshape((n_samples, self.n_visible))
         for i in range(n_samples):
             for _ in range(n_gibbs_steps):
-                h_probs = self._sigmoid(V[i] @ self.W + self.b)
+                h_probs = self._sigmoid(v_inits[i] @ self.W + self.b)
                 h = self.rng.binomial(1, h_probs)
                 v_probs = self._sigmoid(h @ self.W.T + self.a)
                 v = self.rng.binomial(1, v_probs)
