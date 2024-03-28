@@ -1,4 +1,16 @@
 """Principal RBM alpha.
+#TODO: control for verbosity (add 'verbose' arg / think about where to progression bar with `tqdm`) 
+#TODO: add a representation "__repr__" to the class. Look like `RBM(n_visible, n_hidden, rng)`.
+#TODO: move `sigmoid`, and function related to data into others modules (utils, load_data).
+# HACK: optimize code, accelerate matrix computation with numba, parallelized when possible.
+#TODO: check relevance of using the RBM's RNG for generation phase (look inside the gibbs sampling).
+# If a seed has been define, the gibbs sampling step will return the same sample for each it will
+# sample the same h from the binomial -> #WARNING there might be something wrong with the function
+# --- Other Tags .
+# FIXME: This function is returning incorrect results for negative input values.
+# BUG: Division by zero error occurs in certain cases.
+# HACK: This code temporarily fixes the issue, but needs a proper solution.
+# OPTIMIZE: Improve the efficiency of this loop
 """
 
 import os
@@ -169,7 +181,7 @@ class RBM:
         """
         return np.round(np.power(output_img - input_img, 2).mean(), 3)
 
-    def entree_sortie(self, data: np.ndarray) -> np.ndarray:
+    def input_output(self, data: np.ndarray) -> np.ndarray:
         """
         Compute hidden units given visible units.
 
@@ -181,7 +193,7 @@ class RBM:
         """
         return self._sigmoid(data @ self.W + self.b)
 
-    def sortie_entree(self, data_h: np.ndarray) -> np.ndarray:
+    def output_input(self, data_h: np.ndarray) -> np.ndarray:
         """
         Compute visible units given hidden units.
 
@@ -218,9 +230,9 @@ class RBM:
             self.rng.shuffle(data)
             for i in tqdm(range(0, n_samples, batch_size), desc=f"Epoch {epoch}"):
                 batch = data[i: i + batch_size]
-                pos_h_probs = self.entree_sortie(batch)
-                pos_v_probs = self.sortie_entree(pos_h_probs)
-                neg_h_probs = self.entree_sortie(pos_v_probs)
+                pos_h_probs = self.input_output(batch)
+                pos_v_probs = self.output_input(pos_h_probs)
+                neg_h_probs = self.input_output(pos_v_probs)
 
                 # Update weights and biases
                 self.W += (
@@ -242,7 +254,7 @@ class RBM:
 
         return self
 
-    def generer_image(self, n_samples: int = 1, n_gibbs_steps: int = 1) -> np.ndarray:
+    def generate_image(self, n_samples: int=1, n_gibbs_steps: int=1) -> np.ndarray:
         """
         Generate samples from the RBM using Gibbs sampling.
 
@@ -260,8 +272,8 @@ class RBM:
             1, self.rng.random(), size=n_samples * self.n_visible
         ).reshape((n_samples, self.n_visible))
         for i in range(n_samples):
+            h_probs = self._sigmoid(V[i] @ self.W + self.b)
             for _ in range(n_gibbs_steps):
-                h_probs = self._sigmoid(V[i] @ self.W + self.b)
                 h = self.rng.binomial(1, h_probs)
                 v_probs = self._sigmoid(h @ self.W.T + self.a)
                 v = self.rng.binomial(1, v_probs)
