@@ -6,11 +6,10 @@
 #TODO: check relevance of using the RBM's RNG for generation phase (look inside the gibbs sampling).
 # If a seed has been define, the gibbs sampling step will return the same sample for each it will
 # sample the same h from the binomial -> #WARNING there might be something wrong with the function
-# --- Other Tags .
-# FIXME: This function is returning incorrect results for negative input values.
-# BUG: Division by zero error occurs in certain cases.
-# HACK: This code temporarily fixes the issue, but needs a proper solution.
-# OPTIMIZE: Improve the efficiency of this loop
+# --------------------------- Other Tags (Example usage) ---------------------.
+# FIXME: Example: This function is returning incorrect results for negative input values.
+# BUG: Example: Division by zero error occurs in certain cases.
+# HACK: Example: This code temporarily fixes the issue, but needs a proper solution.
 """
 
 import os
