@@ -4,3 +4,4 @@ numba
 matplotlib
 pandas
 tqdm
+torch
