@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='generative_model',
+    name='generative_models',
     version='0.1',
     author='Yedidia AGNIMO & C. Yann Éric CHOHO',
     author_email='yedidia.agnimo@ensae.fr // chohoyanneric.choho@ensae.fr',
