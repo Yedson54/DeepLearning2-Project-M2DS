@@ -56,7 +56,8 @@ class DNN(DBN):
         return f"DNN([\n{join_repr} <CLF>\n])"
 
     def pretrain(
-        self, n_epochs: int, learning_rate: float, batch_size: int, data: np.ndarray
+        self, n_epochs: int, learning_rate: float, batch_size: int, data: np.ndarray,
+        print_each=20, verbose=False
     ) -> "DNN":
         """
         Pretrain the hidden layers of the DNN using the DBN training method.
@@ -73,7 +74,8 @@ class DNN(DBN):
         # NOTE: Use the inherited `train` method to perform pre-training since `self.rbms`
         # only contains the pre-trainable RBMs.
         return self.train(
-            data, n_epochs=n_epochs, learning_rate=learning_rate, batch_size=batch_size
+            data, n_epochs=n_epochs, learning_rate=learning_rate, batch_size=batch_size,
+            print_each=print_each, verbose=verbose
         )
 
     def input_output_network(self, input_data: np.ndarray) -> List[np.ndarray]:
