@@ -6,80 +6,12 @@ from typing import List, Tuple
 
 import numpy as np
 from tqdm import tqdm
-from principal_dbn_alpha import DBN
-from principal_rbm_alpha import RBM
 
-
-def cross_entropy(
-    batch_labels: np.ndarray, output_probs: np.ndarray, eps: float = 1e-15
-) -> float:
-    """
-    Calculate the cross entropy between the batch labels and output probabilities.
-
-    Parameters:
-    - batch_labels (numpy.ndarray): True labels for the batch, shape (batch_size, n_classes).
-    - output_probs (numpy.ndarray): Predicted probabilities for the batch,
-        shape (batch_size, n_classes).
-    - eps (float): Small value to avoid numerical instability in logarithm calculation.
-        Default is 1e-15.
-
-    Returns:
-    - float: Cross entropy value.
-    """
-    return -np.mean(np.sum(batch_labels * np.log(output_probs + eps), axis=1))
-
-
-def classification_error_rate(
-    predictions: np.ndarray, true_labels: np.ndarray
-) -> float:
-    """
-    Calculate the classification error rate.
-
-    Parameters:
-    - predictions (numpy.ndarray): Predicted labels, shape (n_samples, n_classes).
-    - true_labels (numpy.ndarray): True labels, shape (n_samples, n_classes).
-
-    Returns:
-    - float: Classification error rate.
-    """
-    # Calculate accuracy
-    acc = accuracy(predictions, true_labels)
-
-    # Calculate classification error rate
-    error_rate = 1 - acc
-
-    return error_rate
-
-
-def get_predictions_one_hot(output_probs):
-    # Convert softmax probabilities to predictions
-    predictions = np.argmax(output_probs, axis=1)
-    # Create one-hot encoding
-    num_classes = output_probs.shape[1]
-    predictions_one_hot = np.eye(num_classes)[predictions]
-    return predictions_one_hot
-
-
-def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
-    """
-    Calculate the accuracy of the model.
-
-    Parameters:
-    - predictions (numpy.ndarray): Predicted labels, shape (n_samples, n_classes).
-    - true_labels (numpy.ndarray): True labels, shape (n_samples, n_classes).
-
-    Returns:
-    - float: Accuracy of the model.
-    """
-    # Count the number of correct predictions
-    correct_predictions = np.sum(
-        np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1)
-    )
-
-    # Calculate accuracy
-    acc = correct_predictions / len(true_labels)
-
-    return acc
+import functionals as F
+from models.principal_dbn_alpha import DBN
+from models.principal_rbm_alpha import RBM
+from metrics import classification_error_rate
+from utils import get_predictions_one_hot
 
 
 class DNN(DBN):
@@ -108,8 +40,10 @@ class DNN(DBN):
         self.clf = RBM(self.rbms[-1].n_hidden, output_dim)
         # DNN = [DBN + Classifier] ~ [RBM_0,...,RBM_N, RBM_Clf]
         self.network = self.rbms + [self.clf]
-        self.dZs = []
-        self.dWs = []
+        # self.dZs = []
+        # self.dWs = []
+        # self.dbs = []
+        self.n_iter = 0
 
     def __getitem__(self, key):
         return self.network[key]
@@ -122,7 +56,8 @@ class DNN(DBN):
         return f"DNN([\n{join_repr} <CLF>\n])"
 
     def pretrain(
-        self, n_epochs: int, learning_rate: float, batch_size: int, data: np.ndarray
+        self, n_epochs: int, learning_rate: float, batch_size: int, data: np.ndarray,
+        print_each=20, verbose=False
     ) -> "DNN":
         """
         Pretrain the hidden layers of the DNN using the DBN training method.
@@ -139,7 +74,8 @@ class DNN(DBN):
         # NOTE: Use the inherited `train` method to perform pre-training since `self.rbms`
         # only contains the pre-trainable RBMs.
         return self.train(
-            data, n_epochs=n_epochs, learning_rate=learning_rate, batch_size=batch_size
+            data, n_epochs=n_epochs, learning_rate=learning_rate, batch_size=batch_size,
+            print_each=print_each, verbose=verbose
         )
 
     def input_output_network(self, input_data: np.ndarray) -> List[np.ndarray]:
@@ -157,7 +93,8 @@ class DNN(DBN):
         for rbm in self.rbms:
             layer_outputs.append(rbm.input_output(layer_outputs[-1]))
 
-        layer_outputs.append(self.network[-1].calcul_softmax(layer_outputs[-1]))
+        output_logits = self.network[-1].input_output(layer_outputs[-1])
+        layer_outputs.append(F.softmax(output_logits))
 
         return layer_outputs
 
@@ -197,7 +134,11 @@ class DNN(DBN):
         # Update hidden layer weights and biases (layer no. `id_layer` + 1).
         self.network[id_layer].W -= learning_rate * dW
         self.network[id_layer].b -= learning_rate * db
-
+        
+        # self.dZs.append(dZ)
+        # self.dWs.append(dW)
+        # self.dbs.append(db)
+        self.n_iter += 1
         return dZ, dW
 
     def backpropagation(
@@ -208,13 +149,14 @@ class DNN(DBN):
         learning_rate: float = 0.1,
         batch_size: int = 10,
         eps: float = 1e-15,
+        # continuation=False
     ) -> "DNN":
         """
         Estimate the weights/biases of the network using backpropagation algorithm.
 
         Parameters:
         - input_data (numpy.ndarray): Input data, shape (n_samples, n_visible).
-        - labels (numpy.ndarray): Labels for the input data, shape 
+        - labels (numpy.ndarray): Labels for the input data, shape
             (n_samples, n_classes).
         - n_epochs (int): Number of training epochs.
         - learning_rate (float): Learning rate for gradient descent.
@@ -237,6 +179,9 @@ class DNN(DBN):
                 layer_outputs = self.input_output_network(batch_input)
 
                 # Backward pass (update weights and biases)
+
+                # if continuation:
+                #     dZ = self.
                 # Compute output (last) layer gradients (layer L).
                 dZ = (
                     layer_outputs[-1] - batch_labels
@@ -248,6 +193,10 @@ class DNN(DBN):
                 # Update output (last) layer parameters (layer L).
                 self.network[-1].W -= learning_rate * dW
                 self.network[-1].b -= learning_rate * db
+                # self.dZs.append(dZ)
+                # self.dWs.append(dW)
+                # self.dbs.append(db)
+                self.n_iter += 1
 
                 # Iterate layer in reverse order
                 for id_layer in range(-2, -len(self.network)):
@@ -260,11 +209,12 @@ class DNN(DBN):
                         learning_rate=learning_rate,
                     )
 
+
             # HACK: update discrepancy / force
             self.rbms = self.network[:-1]
 
             # Calculate cross entropy after each epoch
-            loss = cross_entropy(batch_labels, layer_outputs[-1], eps)
+            loss = F.cross_entropy(batch_labels, layer_outputs[-1], eps)
             tqdm.write(f"Epoch {epoch + 1}/{n_epochs}, Cross Entropy: {loss}")
 
         return self
@@ -288,6 +238,7 @@ class DNN(DBN):
         estimated_labels_one_hot = get_predictions_one_hot(estimated_labels)
 
         # Calculate classification error rate
-        error_rate = classification_error_rate(estimated_labels_one_hot, true_labels)
+        error_rate = classification_error_rate(
+            estimated_labels_one_hot, true_labels)
 
         return error_rate

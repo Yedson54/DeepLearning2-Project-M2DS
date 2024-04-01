@@ -1,12 +1,14 @@
 """
-Module: dbn.py
+Module: principal_dbn_alpha.py
 Module providing implementation of Deep Belief Network (DBN).
 """
 
 from typing import List
 
 import numpy as np
-from principal_rbm_alpha import RBM
+from tqdm import tqdm
+
+from models.principal_rbm_alpha import RBM
 
 
 class DBN:
@@ -21,10 +23,7 @@ class DBN:
     """
 
     def __init__(
-            self,
-            n_visible: int,
-            hidden_layer_sizes: List[int],
-            random_state=None
+        self, n_visible: int, hidden_layer_sizes: List[int], random_state=None
     ):
         """
         Initialize the Deep Belief Network.
@@ -74,6 +73,7 @@ class DBN:
         n_epochs: int = 10,
         batch_size: int = 10,
         print_each: int = 10,
+        verbose=False,
     ) -> "DBN":
         """
         Train the DBN using Greedy layer-wise procedure.
@@ -89,13 +89,14 @@ class DBN:
         - DBN: Trained DBN instance.
         """
         input_data = data
-        for rbm in self.rbms:
+        for rbm in tqdm(self.rbms, desc="Training RBM layers", unit="layer"):
             rbm.train(
                 input_data,
                 learning_rate=learning_rate,
                 n_epochs=n_epochs,
                 batch_size=batch_size,
                 print_each=print_each,
+                verbose=verbose
             )
             # Update input data for the next RBM
             input_data = rbm.input_output(input_data)
