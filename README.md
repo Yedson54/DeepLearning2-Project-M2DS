@@ -2,7 +2,7 @@
 Deep Learning II Project - M2DS IP Paris. RBM, DBM, DNN
 # Master DS | Institut Polytechnique de Paris
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/LOGO-ENSAE.png/900px-LOGO-ENSAE.png" width="300">
+<center><img src = "https://www.smeno.com/media/Partenaires/logo-ecoles/logo-institut-polytechnique-paris.png" ></center>
 
 ### Realised by : 
 
