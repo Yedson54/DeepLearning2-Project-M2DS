@@ -8,6 +8,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from IPython.display import clear_output
 
 import functionals as F
 import metrics as M
@@ -182,7 +183,6 @@ class RBM:
             # Shuffle the data.
             data = self.rng.permutation(input_data, axis=0)
 
-            quadratic_error = 0
             for i in range(0, n_samples, batch_size):
                 batch = data[i : i + batch_size]
 
@@ -200,8 +200,7 @@ class RBM:
                 self.W += learning_rate * grad_W
 
             # Compute reconstruction error
-            quadratic_error += np.sum((v1 - batch) ** 2) / (n_samples * self.n_visible)
-            # quadratic_error = M.reconstruction_error(batch, positive_v_probs)
+            quadratic_error = M.reconstruction_error(batch, positive_v_probs)
             errors.append(quadratic_error)
 
             if (epoch % print_each == 0 or epoch == n_epochs - 1) * verbose:
@@ -244,10 +243,11 @@ class RBM:
 
         for i in range(n_samples):
             _, h = self.input_output(v_init_matrix[i])
-            for _ in range(n_gibbs_steps):
+            for _ in tqdm(range(n_gibbs_steps)):
                 _, v = self.output_input(h)
                 _, h = self.input_output(v)
             samples[i] = v
+            clear_output(wait=True)
 
         return samples
 

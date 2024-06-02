@@ -215,34 +215,35 @@ def plot_characters_alphadigit(
     plt.show()
 
 
-def plot_original_and_generated_images(
-    original_data: np.ndarray,
+def plot_generated_images(
     generated_samples: np.ndarray,
-    n_images: int = 10,
-    cmap="gray",
-    reshape_generated=(20, 16),
+    n_cols: int = 10,
+    cmap: str = "gray",
+    reshape_generated: Tuple[int, int] = (20, 16),
     **kwargs,
-):
-    """_summary_
+) -> None:
+    """
+    Plot generated images.
 
     Parameters:
-        original_data (np.ndarray): _description_
-        generated_samples (np.ndarray): _description_
-        reshape (tuple, optional): _description_.
-            Defaults to (20, 16) for AlphaDigit data.
+        generated_samples (np.ndarray): Generated samples.
+        n_cols (int, optional): Number of columns in the plot. Defaults to 10.
+        cmap (str, optional): Color map for the plot. Defaults to "gray".
+        reshape_generated (Tuple[int, int], optional): Reshape dimensions for the generated images.
+            Defaults to (20, 16).
+        **kwargs: Additional keyword arguments to be passed to the `imshow` function.
     """
-    # Plot original and generated samples
-    plt.figure(figsize=(12, 6))
+    n_images = generated_samples.shape[0]
+    n_rows = (n_images - 1) // n_cols + 1
+
+    # Plot generated samples
+    plt.figure(figsize=(n_cols * 2, n_rows * 2))
 
     for i in range(n_images):
-        plt.subplot(2, n_images, i + 1)
-        plt.imshow(original_data[i].reshape(reshape_generated), cmap=cmap, **kwargs)
-        plt.title("Original")
-        plt.axis("off")
-
-        plt.subplot(2, 10, i + 11)
+        plt.subplot(n_rows, n_cols, i + 1)
         plt.imshow(generated_samples[i].reshape(reshape_generated), cmap=cmap, **kwargs)
         plt.title("Generated")
         plt.axis("off")
 
+    plt.tight_layout()
     plt.show()

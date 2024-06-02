@@ -19,7 +19,7 @@ def reconstruction_error(
     Returns:
     - float: Reconstruction error.
     """
-    return np.round(np.sum(input_image - reconstructed_image)**2, decimals)
+    return np.round(np.mean((input_image - reconstructed_image)**2), decimals)
 
 
 def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
