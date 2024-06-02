@@ -8,8 +8,8 @@ import numpy as np
 from tqdm import tqdm
 
 import functionals as F
-from models.principal_dbn_alpha import DBN
-from models.principal_rbm_alpha import RBM
+from models.dbn import DBN
+from models.rbm import RBM
 from metrics import classification_error_rate
 from utils import get_predictions_one_hot
 

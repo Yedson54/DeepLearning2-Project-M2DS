@@ -20,11 +20,9 @@ def load_alphadigit(alphadigit_path):
 
 
 def load_mnist(
-    mnist_path: str,
-    dataset_type: Literal["train", "test", "all"] = "all"
+    mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray], 
-    Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 ]:
     """
     Load the MNIST dataset.
@@ -57,18 +55,17 @@ def load_mnist(
     elif dataset_type == "all":
         return mnist_train, mnist_train_labels, mnist_test, mnist_test_labels
     else:
-        raise ValueError(f"Invalid dataset_type {dataset_type}. \
-                         Choose from 'train', 'test', or 'all'.")
+        raise ValueError(
+            f"Invalid dataset_type {dataset_type}. \
+                         Choose from 'train', 'test', or 'all'."
+        )
 
 
-def load_data(
-        file_path: str,
-        which: Literal["alphadigit", "mnist"]
-    ) -> Union[
-        np.ndarray,
-        Tuple[np.ndarray, np.ndarray],
-        Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-    ]:
+def load_data(file_path: str, which: Literal["alphadigit", "mnist"]) -> Union[
+    np.ndarray,
+    Tuple[np.ndarray, np.ndarray],
+    Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+]:
     """
     Load Binary AlphaDigits data from a .mat file.
 
@@ -187,7 +184,11 @@ def get_predictions_one_hot(y_pred_probas: np.ndarray) -> np.ndarray:
 ################ PLOT ################
 ######################################
 def plot_characters_alphadigit(
-    chars: List[Union[str, int]], data: np.ndarray, reshape=(20, 16), **kwargs
+    chars: List[Union[str, int]],
+    data: np.ndarray,
+    reshape=(20, 16),
+    cmap="gray",
+    **kwargs,
 ) -> None:
     """_summary_
 
@@ -206,7 +207,7 @@ def plot_characters_alphadigit(
         # Find the index of the first image corresponding to the current char
         start_index = i * num_images_per_char
         image = data[start_index].reshape(reshape)
-        ax[i].imshow(image, **kwargs)
+        ax[i].imshow(image, cmap=cmap, **kwargs)
         ax[i].set_title(f"Char: {char}")
         ax[i].axis("off")
 
@@ -217,6 +218,8 @@ def plot_characters_alphadigit(
 def plot_original_and_generated_images(
     original_data: np.ndarray,
     generated_samples: np.ndarray,
+    n_images: int = 10,
+    cmap="gray",
     reshape_generated=(20, 16),
     **kwargs,
 ):
@@ -231,15 +234,14 @@ def plot_original_and_generated_images(
     # Plot original and generated samples
     plt.figure(figsize=(12, 6))
 
-    n_images = 10
     for i in range(n_images):
         plt.subplot(2, n_images, i + 1)
-        plt.imshow(original_data[i].reshape(reshape_generated), **kwargs)
+        plt.imshow(original_data[i].reshape(reshape_generated), cmap=cmap, **kwargs)
         plt.title("Original")
         plt.axis("off")
 
         plt.subplot(2, 10, i + 11)
-        plt.imshow(generated_samples[i].reshape(reshape_generated), **kwargs)
+        plt.imshow(generated_samples[i].reshape(reshape_generated), cmap=cmap, **kwargs)
         plt.title("Generated")
         plt.axis("off")
 

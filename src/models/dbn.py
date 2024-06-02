@@ -8,7 +8,7 @@ from typing import List
 import numpy as np
 from tqdm import tqdm
 
-from models.principal_rbm_alpha import RBM
+from models.rbm import RBM
 
 
 class DBN:
