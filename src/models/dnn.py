@@ -140,6 +140,7 @@ class DNN(DBN):
         dW = layer_outputs[id_layer - 1].T @ dZ
         db = np.sum(dZ, axis=0, keepdims=True)
 
+
         # Update hidden layer weights and biases (layer no. `id_layer` + 1).
         self.network[id_layer].W -= learning_rate * dW
         self.network[id_layer].b -= learning_rate * db
