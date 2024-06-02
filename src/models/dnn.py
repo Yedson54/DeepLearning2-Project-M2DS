@@ -136,7 +136,7 @@ class DNN(DBN):
             (dZ_lead @ dW_lead.T)
             * layer_outputs[id_layer]
             * (1 - layer_outputs[id_layer])
-        )
+        ) # / batch_size
         dW = layer_outputs[id_layer - 1].T @ dZ
         db = np.sum(dZ, axis=0, keepdims=False)
 
@@ -186,7 +186,7 @@ class DNN(DBN):
                 batch_input = shuffled_data[batch_start:batch_end]
                 batch_labels = shuffled_labels[batch_start:batch_end]
 
-                # Forward pass
+                # Forward pass.
                 layer_outputs = self.input_output_network(batch_input)
 
                 # Backward pass (update weights and biases)
@@ -199,7 +199,7 @@ class DNN(DBN):
                 self.network[-1].b -= learning_rate * db
                 self.n_iter += 1
 
-                ## Iterate layer in reverse order
+                ## Iterate layer in reverse order.
                 for id_layer in range(-2, -len(self.network)):
                     dZ, dW = self.update(
                         dZ_lead=dZ,
@@ -234,10 +234,10 @@ class DNN(DBN):
         - float: Classification error rate.
         """
         # Estimate labels using the trained DNN
-        estimated_labels = self.input_output_network(test_data)[-1]
+        softmax_labels = self.input_output_network(test_data)[-1]
 
         # Convert softmax probabilities to one-hot encoded predictions
-        estimated_labels_one_hot = get_predictions_one_hot(estimated_labels)
+        estimated_labels_one_hot = get_predictions_one_hot(softmax_labels)
 
         # Calculate classification error rate
         error_rate = classification_error_rate(estimated_labels_one_hot, true_labels)
