@@ -40,9 +40,6 @@ class DNN(DBN):
         self.clf = RBM(self.rbms[-1].n_hidden, output_dim)
         # DNN = [DBN + Classifier] ~ [RBM_0,...,RBM_N, RBM_Clf]
         self.network = self.rbms + [self.clf]
-        # self.dZs = []
-        # self.dWs = []
-        # self.dbs = []
         self.n_iter = 0
 
     def __getitem__(self, key):
@@ -56,8 +53,13 @@ class DNN(DBN):
         return f"DNN([\n{join_repr} <CLF>\n])"
 
     def pretrain(
-        self, n_epochs: int, learning_rate: float, batch_size: int, data: np.ndarray,
-        print_each=20, verbose=False
+        self,
+        n_epochs: int,
+        learning_rate: float,
+        batch_size: int,
+        data: np.ndarray,
+        print_each=20,
+        verbose=False,
     ) -> "DNN":
         """
         Pretrain the hidden layers of the DNN using the DBN training method.
@@ -74,8 +76,12 @@ class DNN(DBN):
         # NOTE: Use the inherited `train` method to perform pre-training since `self.rbms`
         # only contains the pre-trainable RBMs.
         return self.train(
-            data, n_epochs=n_epochs, learning_rate=learning_rate, batch_size=batch_size,
-            print_each=print_each, verbose=verbose
+            data,
+            n_epochs=n_epochs,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            print_each=print_each,
+            verbose=verbose,
         )
 
     def input_output_network(self, input_data: np.ndarray) -> List[np.ndarray]:
@@ -91,10 +97,11 @@ class DNN(DBN):
         layer_outputs = [input_data]
 
         for rbm in self.rbms:
-            layer_outputs.append(rbm.input_output(layer_outputs[-1]))
+            h_probas, h_predictions = rbm.input_output(layer_outputs[-1])
+            layer_outputs.append(h_predictions)
 
-        output_logits = self.network[-1].input_output(layer_outputs[-1])
-        layer_outputs.append(F.softmax(output_logits))
+        h_last_probas, h_last_predictions = self.network[-1].input_output(layer_outputs[-1])
+        layer_outputs.append(F.softmax(h_last_predictions))
 
         return layer_outputs
 
@@ -105,7 +112,7 @@ class DNN(DBN):
         layer_outputs: List[np.ndarray],
         id_layer: int,
         batch_size: int,
-        learning_rate: int,
+        learning_rate: float,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Update the weights and biases of a layer.
@@ -131,13 +138,10 @@ class DNN(DBN):
         )
         dW = layer_outputs[id_layer - 1].T @ dZ
         db = np.sum(dZ, axis=0, keepdims=True)
+
         # Update hidden layer weights and biases (layer no. `id_layer` + 1).
         self.network[id_layer].W -= learning_rate * dW
         self.network[id_layer].b -= learning_rate * db
-        
-        # self.dZs.append(dZ)
-        # self.dWs.append(dW)
-        # self.dbs.append(db)
         self.n_iter += 1
         return dZ, dW
 
@@ -209,7 +213,6 @@ class DNN(DBN):
                         learning_rate=learning_rate,
                     )
 
-
             # HACK: update discrepancy / force
             self.rbms = self.network[:-1]
 
@@ -238,7 +241,6 @@ class DNN(DBN):
         estimated_labels_one_hot = get_predictions_one_hot(estimated_labels)
 
         # Calculate classification error rate
-        error_rate = classification_error_rate(
-            estimated_labels_one_hot, true_labels)
+        error_rate = classification_error_rate(estimated_labels_one_hot, true_labels)
 
         return error_rate

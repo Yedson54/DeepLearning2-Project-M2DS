@@ -8,7 +8,6 @@ def reconstruction_error(
     input_image: np.ndarray,
     reconstructed_image: np.ndarray,
     decimals: int = 4
-    decimals: int = 4
 ) -> float:
     """
     Compute reconstruction error.
@@ -20,7 +19,7 @@ def reconstruction_error(
     Returns:
     - float: Reconstruction error.
     """
-    return np.round(np.mean((input_image - reconstructed_image)**2), decimals)
+    return np.round(np.mean((input_image - reconstructed_image) ** 2), decimals)
 
 
 def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
@@ -36,8 +35,7 @@ def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
     """
     # Count the number of correct predictions
     correct_predictions = np.sum(
-        np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1) 
-        np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1) 
+        np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1)
     )
 
     # Calculate accuracy
@@ -47,7 +45,8 @@ def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
 
 
 def classification_error_rate(
-    predictions: np.ndarray, true_labels: np.ndarray
+    predictions: np.ndarray,
+    true_labels: np.ndarray
 ) -> float:
     """
     Calculate the classification error rate.

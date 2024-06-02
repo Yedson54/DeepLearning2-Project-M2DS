@@ -16,14 +16,13 @@ ALPHA_DIGIT_PATH = os.path.join(DATA_FOLDER, "binaryalphadigs.mat")
 ################ DATA: ETL ################
 ###########################################
 def load_alphadigit(alphadigit_path):
+    """Load the binary AlphaDigits dataset from a .mat file."""
     return scipy.io.loadmat(alphadigit_path)["dat"]
 
 
 def load_mnist(
     mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
-    mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
 ) -> Union[
-    Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 ]:
     """
@@ -35,9 +34,10 @@ def load_mnist(
             Defaults to 'all'.
 
     Returns:
-        Union[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]]:
-            If dataset_type is 'train' or 'test', returns a tuple of numpy arrays (X_data, y_labels).
-            If dataset_type is 'all', returns a tuple of four numpy arrays (X_train, y_train, X_test, y_test).
+        If dataset_type is 'train' or 'test', returns a tuple of numpy arrays
+            (X_data, y_labels).
+        If dataset_type is 'all', returns a tuple of four numpy arrays
+            (X_train, y_train, X_test, y_test).
     """
     mnist = scipy.io.loadmat(mnist_path)
     mnist_train = np.concatenate([mnist[f"train{i}"] for i in range(10)], axis=0)
@@ -61,17 +61,8 @@ def load_mnist(
             f"Invalid dataset_type {dataset_type}. \
                          Choose from 'train', 'test', or 'all'."
         )
-        raise ValueError(
-            f"Invalid dataset_type {dataset_type}. \
-                         Choose from 'train', 'test', or 'all'."
-        )
 
 
-def load_data(file_path: str, which: Literal["alphadigit", "mnist"]) -> Union[
-    np.ndarray,
-    Tuple[np.ndarray, np.ndarray],
-    Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-]:
 def load_data(file_path: str, which: Literal["alphadigit", "mnist"]) -> Union[
     np.ndarray,
     Tuple[np.ndarray, np.ndarray],
@@ -195,11 +186,6 @@ def get_predictions_one_hot(y_pred_probas: np.ndarray) -> np.ndarray:
 ################ PLOT ################
 ######################################
 def plot_characters_alphadigit(
-    chars: List[Union[str, int]],
-    data: np.ndarray,
-    reshape=(20, 16),
-    cmap="gray",
-    **kwargs,
     chars: List[Union[str, int]],
     data: np.ndarray,
     reshape=(20, 16),
