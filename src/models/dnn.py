@@ -136,9 +136,9 @@ class DNN(DBN):
             (dZ_lead @ dW_lead.T)
             * layer_outputs[id_layer]
             * (1 - layer_outputs[id_layer])
-        )
+        ) # / batch_size
         dW = layer_outputs[id_layer - 1].T @ dZ
-        db = np.sum(dZ, axis=0, keepdims=True)
+        db = np.sum(dZ, axis=0)
 
 
         # Update hidden layer weights and biases (layer no. `id_layer` + 1).
@@ -180,26 +180,27 @@ class DNN(DBN):
             shuffled_data = input_data[shuffled_indices]
             shuffled_labels = labels[shuffled_indices]
 
+            loss = 0.0
             for batch_start in range(0, n_samples, batch_size):
                 # Shuffle data and labels.
                 batch_end = min(batch_start + batch_size, n_samples)
                 batch_input = shuffled_data[batch_start:batch_end]
                 batch_labels = shuffled_labels[batch_start:batch_end]
 
-                # Forward pass
+                # Forward pass.
                 layer_outputs = self.input_output_network(batch_input)
 
                 # Backward pass (update weights and biases)
                 ## Compute output (last) layer gradients (layer L).
                 dZ = (layer_outputs[-1] - batch_labels) # -> (n_samples, output_dim) -> (self[-2].n_hidden, self[-1].n_hidden)
                 dW = layer_outputs[-2].T @ dZ # -> (1, self[-1].n_hidden)
-                db = np.sum(dZ, axis=0, keepdims=True)
+                db = np.sum(dZ, axis=0)
                 ## Update output (last) layer parameters (layer L).
                 self.network[-1].W -= learning_rate * dW
                 self.network[-1].b -= learning_rate * db
                 self.n_iter += 1
 
-                ## Iterate layer in reverse order
+                ## Iterate layer in reverse order.
                 for id_layer in range(-2, -len(self.network)):
                     dZ, dW = self.update(
                         dZ_lead=dZ,
@@ -210,11 +211,11 @@ class DNN(DBN):
                         learning_rate=learning_rate,
                     )
 
+                # Update cross entropy.
+                loss += F.cross_entropy(batch_labels, layer_outputs[-1], eps)
+                 
             # HACK: update discrepancy / ensure consistency between self.rbms and self.network[:-1]
             self.rbms = self.network[:-1]
-
-            # Calculate cross entropy after each epoch
-            loss = F.cross_entropy(batch_labels, layer_outputs[-1], eps)
             tqdm.write(f"Epoch {epoch + 1}/{n_epochs}, Cross Entropy: {loss}")
             losses.append(loss)
 
@@ -233,10 +234,10 @@ class DNN(DBN):
         - float: Classification error rate.
         """
         # Estimate labels using the trained DNN
-        estimated_labels = self.input_output_network(test_data)[-1]
+        softmax_labels = self.input_output_network(test_data)[-1]
 
         # Convert softmax probabilities to one-hot encoded predictions
-        estimated_labels_one_hot = get_predictions_one_hot(estimated_labels)
+        estimated_labels_one_hot = get_predictions_one_hot(softmax_labels)
 
         # Calculate classification error rate
         error_rate = classification_error_rate(estimated_labels_one_hot, true_labels)

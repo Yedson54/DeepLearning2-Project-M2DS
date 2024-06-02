@@ -12,16 +12,16 @@ DATA_FOLDER = "../data/"
 ALPHA_DIGIT_PATH = os.path.join(DATA_FOLDER, "binaryalphadigs.mat")
 
 
-###########################################
-################ DATA: ETL ################
-###########################################
+##############################################################################
+######################## DATA: Extract, Transform, Load ######################
+##############################################################################
 def load_alphadigit(alphadigit_path):
     """Load the binary AlphaDigits dataset from a .mat file."""
     return scipy.io.loadmat(alphadigit_path)["dat"]
 
-
 def load_mnist(
-    mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
+    mnist_path: str, 
+    dataset_type: Literal["train", "test", "all"] = "all"
 ) -> Union[
     Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 ]:
@@ -184,9 +184,63 @@ def get_predictions_one_hot(y_pred_probas: np.ndarray) -> np.ndarray:
     return predictions_one_hot
 
 
-######################################
-################ PLOT ################
-######################################
+def sample_indices(data_size: int, sample_size: int, random_state=None) -> np.ndarray:
+    """
+    Randomly sample indices from the range [0, data_size) without replacement.
+
+    Parameters:
+        data_size (int): Total number of indices available.
+        sample_size (int): Number of indices to sample.
+        random_state: Random seed for reproducibility.
+
+    Returns:
+        numpy.ndarray: Array of sampled indices.
+    """
+    rng = np.random.default_rng(random_state)
+    if sample_size >= data_size:
+        return np.arange(data_size)
+
+    sampled_indices = rng.choice(data_size, size=sample_size, replace=False)
+    return sampled_indices
+
+
+def sample_mnist(
+    X_train: np.ndarray,
+    y_train: np.ndarray,
+    sample_size: int,
+    random_state=None
+) -> tuple:
+    """
+    Randomly sample a subset of samples from the MNIST dataset.
+
+    Parameters:
+        X_train (numpy.ndarray): Training data.
+        y_train (numpy.ndarray): Training labels.
+        sample_size (int): Number of samples to sample.
+        random_state: Random seed for reproducibility.
+
+    Returns:
+        tuple: Sampled subset of training data and labels.
+    """
+    # Sample indices
+    indices = sample_indices(len(X_train), sample_size, random_state=random_state)
+
+    # Sample data and labels
+    sampled_X_train = X_train[indices]
+    sampled_y_train = y_train[indices]
+
+    return sampled_X_train, sampled_y_train
+
+
+def binarize_images(images):
+    threshold = 127
+    binary_images = np.where(images > threshold, 1, 0)
+    return binary_images
+
+
+##############################################################################
+############################ PLOT FUNCTION ###################################
+##############################################################################
 def plot_characters_alphadigit(
     chars: List[Union[str, int]],
     data: np.ndarray,
