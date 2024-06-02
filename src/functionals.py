@@ -53,4 +53,4 @@ def cross_entropy(
     Returns:
     - float: Cross entropy value.
     """
-    return -np.mean(np.sum(batch_labels * np.log(output_probs + eps), axis=1))
+    return -np.sum(batch_labels * np.log(output_probs + eps))

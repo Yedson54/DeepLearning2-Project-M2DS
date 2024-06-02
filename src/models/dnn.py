@@ -138,7 +138,7 @@ class DNN(DBN):
             * (1 - layer_outputs[id_layer])
         )
         dW = layer_outputs[id_layer - 1].T @ dZ
-        db = np.sum(dZ, axis=0, keepdims=True)
+        db = np.sum(dZ, axis=0, keepdims=False)
 
 
         # Update hidden layer weights and biases (layer no. `id_layer` + 1).
@@ -179,7 +179,7 @@ class DNN(DBN):
             shuffled_indices = self.rng.permutation(n_samples)
             shuffled_data = input_data[shuffled_indices]
             shuffled_labels = labels[shuffled_indices]
-
+            loss = 0
             for batch_start in range(0, n_samples, batch_size):
                 # Shuffle data and labels.
                 batch_end = min(batch_start + batch_size, n_samples)
@@ -193,7 +193,7 @@ class DNN(DBN):
                 ## Compute output (last) layer gradients (layer L).
                 dZ = (layer_outputs[-1] - batch_labels) # -> (n_samples, output_dim) -> (self[-2].n_hidden, self[-1].n_hidden)
                 dW = layer_outputs[-2].T @ dZ # -> (1, self[-1].n_hidden)
-                db = np.sum(dZ, axis=0, keepdims=True)
+                db = np.sum(dZ, axis=0, keepdims=False)
                 ## Update output (last) layer parameters (layer L).
                 self.network[-1].W -= learning_rate * dW
                 self.network[-1].b -= learning_rate * db
@@ -210,11 +210,12 @@ class DNN(DBN):
                         learning_rate=learning_rate,
                     )
 
-            # HACK: update discrepancy / ensure consistency between self.rbms and self.network[:-1]
-            self.rbms = self.network[:-1]
+                # HACK: update discrepancy / ensure consistency between self.rbms and self.network[:-1]
 
-            # Calculate cross entropy after each epoch
-            loss = F.cross_entropy(batch_labels, layer_outputs[-1], eps)
+                # Calculate cross entropy after each epoch
+                loss += F.cross_entropy(batch_labels, layer_outputs[-1], eps)
+            loss /= n_samples    
+            self.rbms = self.network[:-1]
             tqdm.write(f"Epoch {epoch + 1}/{n_epochs}, Cross Entropy: {loss}")
             losses.append(loss)
 
@@ -241,4 +242,4 @@ class DNN(DBN):
         # Calculate classification error rate
         error_rate = classification_error_rate(estimated_labels_one_hot, true_labels)
 
-        return error_rate
+        return error_rate, estimated_labels_one_hot
