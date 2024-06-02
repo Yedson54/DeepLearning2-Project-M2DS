@@ -8,6 +8,7 @@ def reconstruction_error(
     input_image: np.ndarray,
     reconstructed_image: np.ndarray,
     decimals: int = 4
+    decimals: int = 4
 ) -> float:
     """
     Compute reconstruction error.
@@ -35,6 +36,7 @@ def accuracy(predictions: np.ndarray, true_labels: np.ndarray) -> float:
     """
     # Count the number of correct predictions
     correct_predictions = np.sum(
+        np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1) 
         np.argmax(predictions, axis=1) == np.argmax(true_labels, axis=1) 
     )
 

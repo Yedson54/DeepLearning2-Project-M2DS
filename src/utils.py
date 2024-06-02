@@ -21,7 +21,9 @@ def load_alphadigit(alphadigit_path):
 
 def load_mnist(
     mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
+    mnist_path: str, dataset_type: Literal["train", "test", "all"] = "all"
 ) -> Union[
+    Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
     Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
 ]:
     """
@@ -59,8 +61,17 @@ def load_mnist(
             f"Invalid dataset_type {dataset_type}. \
                          Choose from 'train', 'test', or 'all'."
         )
+        raise ValueError(
+            f"Invalid dataset_type {dataset_type}. \
+                         Choose from 'train', 'test', or 'all'."
+        )
 
 
+def load_data(file_path: str, which: Literal["alphadigit", "mnist"]) -> Union[
+    np.ndarray,
+    Tuple[np.ndarray, np.ndarray],
+    Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+]:
 def load_data(file_path: str, which: Literal["alphadigit", "mnist"]) -> Union[
     np.ndarray,
     Tuple[np.ndarray, np.ndarray],
@@ -189,6 +200,11 @@ def plot_characters_alphadigit(
     reshape=(20, 16),
     cmap="gray",
     **kwargs,
+    chars: List[Union[str, int]],
+    data: np.ndarray,
+    reshape=(20, 16),
+    cmap="gray",
+    **kwargs,
 ) -> None:
     """_summary_
 
@@ -207,6 +223,7 @@ def plot_characters_alphadigit(
         # Find the index of the first image corresponding to the current char
         start_index = i * num_images_per_char
         image = data[start_index].reshape(reshape)
+        ax[i].imshow(image, cmap=cmap, **kwargs)
         ax[i].imshow(image, cmap=cmap, **kwargs)
         ax[i].set_title(f"Char: {char}")
         ax[i].axis("off")

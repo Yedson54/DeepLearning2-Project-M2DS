@@ -6,7 +6,13 @@ Module providing implementation of Deep Belief Network (DBN).
 from typing import List
 
 import numpy as np
+<<<<<<<< HEAD:src/principal_dbn_alpha.py
 from principal_rbm_alpha import RBM
+========
+from tqdm import tqdm
+
+from models.rbm import RBM
+>>>>>>>> da4372f1010c252793176a827968f8f4c5f5c30c:src/models/dbn.py
 
 
 class DBN:
