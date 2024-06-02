@@ -1,0 +1,8 @@
+Error Rate for Random Initialization [Train]:
+0.875
+Error Rate for Pretrained Network:
+0.42700000000000005
+Error Rate for Random Initialization [Test]:
+0.875
+Error Rate for Pretrained Network [Test]:
+0.42700000000000005

@@ -1,0 +1,10 @@
+Error Rate for Random Initialization [Train]:
+0.8990333333333334
+Error Rate for Pretrained Network:
+0.7237666666666667
+Error Rate for Random Initialization [Test]:
+0.8990333333333334
+Error Rate for Pretrained Network [Test]:
+0.7237666666666667
+
+([(0.8990333333333334, 0.8990333333333334)], [(0.7237666666666667, 0.7237666666666667)])
