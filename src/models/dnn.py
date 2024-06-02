@@ -95,13 +95,14 @@ class DNN(DBN):
         - List[np.ndarray]: Input data, outputs on each layer and softmax probabilities.
         """
         layer_outputs = [input_data]
-
+        layer_probas = []
         for rbm in self.rbms:
             h_probas, h_predictions = rbm.input_output(layer_outputs[-1])
             layer_outputs.append(h_predictions)
+            layer_probas.append(h_probas)
 
-        h_last_probas, h_last_predictions = self.network[-1].input_output(layer_outputs[-1])
-        layer_outputs.append(F.softmax(h_last_predictions))
+        output_logits, output_prediction = self.network[-1].input_output(layer_outputs[-1])
+        layer_outputs.append(F.softmax(h_probas))
 
         return layer_outputs
 
@@ -123,7 +124,7 @@ class DNN(DBN):
         - layer_outputs (List[np.ndarray]): Outputs of each layer.
         - id_layer (int): Index of the layer.
         - batch_size (int): Size of mini-batches.
-        - learning_rate (int): Learning rate.
+        - learning_rate (float): Learning rate.
 
         Returns:
         - Tuple[np.ndarray, np.ndarray]: Updated gradient with respect to the

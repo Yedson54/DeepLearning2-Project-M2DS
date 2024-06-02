@@ -176,9 +176,11 @@ def get_predictions_one_hot(y_pred_probas: np.ndarray) -> np.ndarray:
     """
     # Convert softmax probabilities to predictions
     predictions = np.argmax(y_pred_probas, axis=1)
+    
     # Create one-hot encoding
     num_classes = y_pred_probas.shape[1]
     predictions_one_hot = np.eye(num_classes)[predictions]
+
     return predictions_one_hot
 
 
