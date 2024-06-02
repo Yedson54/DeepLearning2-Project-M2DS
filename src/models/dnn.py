@@ -97,12 +97,13 @@ class DNN(DBN):
         layer_outputs = [input_data]
         layer_probas = []
         for rbm in self.rbms:
-            h_probas, h_predictions = rbm.input_output(layer_outputs[-1])
-            layer_outputs.append(h_predictions)
+            h_probas, h_pred = rbm.input_output(layer_outputs[-1])
+            layer_outputs.append(h_pred)
             layer_probas.append(h_probas)
 
-        output_logits, output_prediction = self.network[-1].input_output(layer_outputs[-1])
-        layer_outputs.append(F.softmax(h_probas))
+        rbm_clf = self.network[-1]
+        output_logits = layer_outputs[-1] @ rbm_clf.W + rbm_clf.b
+        layer_outputs.append(F.softmax(output_logits))
 
         return layer_outputs
 
@@ -135,7 +136,6 @@ class DNN(DBN):
             (dZ_lead @ dW_lead.T)
             * layer_outputs[id_layer]
             * (1 - layer_outputs[id_layer])
-            / batch_size
         )
         dW = layer_outputs[id_layer - 1].T @ dZ
         db = np.sum(dZ, axis=0, keepdims=True)
@@ -173,37 +173,32 @@ class DNN(DBN):
         - DNN: Updated DNN instance.
         """
         n_samples = input_data.shape[0]
-
+        losses = []
         for epoch in tqdm(range(n_epochs), desc="Training", unit="epoch"):
+            shuffled_indices = self.rng.permutation(n_samples)
+            shuffled_data = input_data[shuffled_indices]
+            shuffled_labels = labels[shuffled_indices]
+
             for batch_start in range(0, n_samples, batch_size):
+                # Shuffle data and labels.
                 batch_end = min(batch_start + batch_size, n_samples)
-                batch_input = input_data[batch_start:batch_end]
-                batch_labels = labels[batch_start:batch_end]
+                batch_input = shuffled_data[batch_start:batch_end]
+                batch_labels = shuffled_labels[batch_start:batch_end]
 
                 # Forward pass
                 layer_outputs = self.input_output_network(batch_input)
 
                 # Backward pass (update weights and biases)
-
-                # if continuation:
-                #     dZ = self.
-                # Compute output (last) layer gradients (layer L).
-                dZ = (
-                    layer_outputs[-1] - batch_labels
-                ) / batch_size  # -> (n_samples, output_dim)
-                # -> (self[-2].n_hidden, self[-1].n_hidden)
-                dW = layer_outputs[-2].T @ dZ
-                # -> (1, self[-1].n_hidden)
+                ## Compute output (last) layer gradients (layer L).
+                dZ = (layer_outputs[-1] - batch_labels) # -> (n_samples, output_dim) -> (self[-2].n_hidden, self[-1].n_hidden)
+                dW = layer_outputs[-2].T @ dZ # -> (1, self[-1].n_hidden)
                 db = np.sum(dZ, axis=0, keepdims=True)
-                # Update output (last) layer parameters (layer L).
+                ## Update output (last) layer parameters (layer L).
                 self.network[-1].W -= learning_rate * dW
                 self.network[-1].b -= learning_rate * db
-                # self.dZs.append(dZ)
-                # self.dWs.append(dW)
-                # self.dbs.append(db)
                 self.n_iter += 1
 
-                # Iterate layer in reverse order
+                ## Iterate layer in reverse order
                 for id_layer in range(-2, -len(self.network)):
                     dZ, dW = self.update(
                         dZ_lead=dZ,
@@ -214,14 +209,15 @@ class DNN(DBN):
                         learning_rate=learning_rate,
                     )
 
-            # HACK: update discrepancy / force
+            # HACK: update discrepancy / ensure consistency between self.rbms and self.network[:-1]
             self.rbms = self.network[:-1]
 
             # Calculate cross entropy after each epoch
             loss = F.cross_entropy(batch_labels, layer_outputs[-1], eps)
             tqdm.write(f"Epoch {epoch + 1}/{n_epochs}, Cross Entropy: {loss}")
+            losses.append(loss)
 
-        return self
+        return losses
 
     def test(self, test_data: np.ndarray, true_labels: np.ndarray) -> float:
         """

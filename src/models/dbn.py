@@ -108,14 +108,15 @@ class DBN:
                 **kwargs,
             )
             errors.extend(errors_rbm)
-            losses.extend(errors_rbm[-1])
+            losses.append(errors_rbm[-1])
             # Update input data for the next RBM
             h_probs, input_data = rbm.input_output(input_data)
 
         return errors, losses
 
     def generate_image(
-        self, n_samples: int = 1, n_gibbs_steps: int = 100
+        self, n_samples: int = 1,
+        n_gibbs_steps: int = 100
     ) -> np.ndarray:
         """
         Generate samples from the DBN using Gibbs sampling.

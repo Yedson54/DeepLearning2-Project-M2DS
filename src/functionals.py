@@ -32,12 +32,13 @@ def softmax(hidden_activations: np.ndarray) -> np.ndarray:
     softmax_probs = exp_hidden_activations / np.sum(
         exp_hidden_activations, axis=1, keepdims=True
     )
-
     return softmax_probs
 
 
 def cross_entropy(
-    batch_labels: np.ndarray, output_probs: np.ndarray, eps: float = 1e-15
+    batch_labels: np.ndarray,
+    output_probs: np.ndarray,
+    eps: float = 1e-15
 ) -> float:
     """
     Calculate the cross entropy between the batch labels and output probabilities.

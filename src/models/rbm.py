@@ -181,10 +181,10 @@ class RBM:
         errors = []
         for epoch in range(n_epochs):
             # Shuffle the data.
-            data = self.rng.permutation(input_data, axis=0)
+            shuffled_data = self.rng.permutation(input_data, axis=0)
 
             for i in range(0, n_samples, batch_size):
-                batch = data[i : i + batch_size]
+                batch = shuffled_data[i : i + batch_size]
 
                 # Gibbs sampling.
                 positive_h_probs, h0 = self.input_output(batch)  # probas_h_given_v0
