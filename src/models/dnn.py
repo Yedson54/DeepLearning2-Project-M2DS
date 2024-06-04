@@ -135,7 +135,7 @@ class DNN(DBN):
         dZ = (
             (dZ_lead @ dW_lead.T)
             * layer_outputs[id_layer]
-            * (1 - layer_outputs[id_layer])
+            * (1 - layer_outputs[id_layer])/ batch_size
         ) # / batch_size
         dW = layer_outputs[id_layer - 1].T @ dZ
         db = np.sum(dZ, axis=0, keepdims=False)
